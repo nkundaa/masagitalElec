@@ -15,8 +15,9 @@ return new class extends Migration
             $table->string('id')->primary();
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
             $table->integer('total');
-            $table->string('status')->default('confirmed');
+            $table->string('status')->default('pending_payment');
             $table->string('payment_method');
+            $table->string('payment_phone')->nullable();
             $table->text('delivery_address');
             $table->string('phone');
             $table->timestamps();

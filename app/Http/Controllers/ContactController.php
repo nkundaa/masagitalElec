@@ -7,6 +7,11 @@ use Illuminate\Http\Request;
 
 class ContactController extends Controller
 {
+    public function index()
+    {
+        return view('contact');
+    }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -18,6 +23,6 @@ class ContactController extends Controller
 
         Contact::create($request->only('name', 'email', 'subject', 'message'));
 
-        return response()->json(['message' => 'Your message has been sent successfully!']);
+        return redirect()->route('contact.index')->with('success', 'Your message has been sent successfully! We will get back to you shortly.');
     }
 }

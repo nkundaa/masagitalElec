@@ -10,13 +10,21 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    public function showLogin()
+    {
+        if (Auth::check()) {
+            return redirect()->route('home');
+        }
+        return view('auth.login');
+    }
+
     public function register(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'required|string|max:20',
-            'password' => 'required|string|min:6',
+            'password' => 'required|string|min:6|confirmed',
         ]);
 
         $user = User::create([
@@ -28,14 +36,7 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        return response()->json([
-            'user' => [
-                'id' => (string)$user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-            ]
-        ]);
+        return redirect()->route('home')->with('success', 'Account created successfully! Welcome to Masagital Electronics.');
     }
 
     public function login(Request $request)
@@ -52,16 +53,8 @@ class AuthController extends Controller
         }
 
         $request->session()->regenerate();
-        $user = Auth::user();
 
-        return response()->json([
-            'user' => [
-                'id' => (string)$user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-            ]
-        ]);
+        return redirect()->intended(route('home'))->with('success', 'Logged in successfully! Welcome back.');
     }
 
     public function logout(Request $request)
@@ -70,38 +63,21 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return response()->json(['message' => 'Logged out successfully']);
-    }
-
-    public function user(Request $request)
-    {
-        $user = Auth::user();
-        if (!$user) {
-            return response()->json(['user' => null]);
-        }
-
-        return response()->json([
-            'user' => [
-                'id' => (string)$user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-            ]
-        ]);
+        return redirect()->route('home')->with('success', 'Signed out successfully.');
     }
 
     public function updateProfile(Request $request)
     {
         $user = Auth::user();
         if (!$user) {
-            return response()->json(['error' => 'Unauthenticated'], 401);
+            return redirect()->route('login')->with('error', 'Please log in to continue.');
         }
 
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'phone' => 'required|string|max:20',
-            'password' => 'nullable|string|min:6',
+            'password' => 'nullable|string|min:6|confirmed',
         ]);
 
         $user->name = $request->name;
@@ -114,13 +90,6 @@ class AuthController extends Controller
 
         $user->save();
 
-        return response()->json([
-            'user' => [
-                'id' => (string)$user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-            ]
-        ]);
+        return redirect()->route('profile')->with('success', 'Profile updated successfully!');
     }
 }
